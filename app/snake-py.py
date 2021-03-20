@@ -19,7 +19,7 @@ class Cube(object):
     ):
         self.pos = start
         self.dirnx = dirnx
-        self.dirny = dirny  # "L", "R", "U", "D"
+        self.dirny = dirny
         self.color = color
         self.width = width
         self.rows = rows
