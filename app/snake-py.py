@@ -1,27 +1,28 @@
 """ Snake the game """
 
-import math
 import random
 import pygame
-from pygame.locals import *
-import tkinter as tk
-from tkinter import messagebox
 from typing import Any
 
 
 class Cube(object):
     """ Cube class """
 
-    rows = 0
-    w = 0
-
     def __init__(
-        self, start: Any, dirnx: int = 1, dirny: int = 0, color: Any = (255, 0, 0)
+        self,
+        start: Any,
+        width: int,
+        rows: int,
+        dirnx: int = 1,
+        dirny: int = 0,
+        color: Any = (255, 0, 0),
     ):
         self.pos = start
         self.dirnx = dirnx
         self.dirny = dirny  # "L", "R", "U", "D"
         self.color = color
+        self.width = width
+        self.rows = rows
 
     def move(self, dirnx: int, dirny: int) -> Any:
         """ move method """
@@ -31,7 +32,7 @@ class Cube(object):
 
     def draw(self, win: Any, eyes: bool = False) -> Any:
         """ draw method """
-        dis = self.w // self.rows
+        dis = self.width // self.rows
         i = self.pos[0]
         j = self.pos[1]
 
@@ -48,15 +49,17 @@ class Cube(object):
 class Snake(object):
     """ Snake class """
 
-    body: list = []
-    turns: set = {}
+    body = []
+    turns = {}
 
-    def __init__(self, color: Any, pos: Any):
+    def __init__(self, color: Any, pos: Any, width: int, rows: int):
         self.color = color
-        self.head = Cube(pos)
+        self.head = Cube(pos, width, rows)
         self.body.append(self.head)
         self.dirnx = 0
         self.dirny = 1
+        self.width = width
+        self.rows = rows
 
     def move(self) -> Any:
         """ move method """
@@ -96,7 +99,7 @@ class Snake(object):
 
     def reset(self, pos: Any) -> Any:
         """ reset method """
-        self.head = Cube(pos)
+        self.head = Cube(pos, self.width, self.rows)
         self.body = []
         self.body.append(self.head)
         self.turns = {}
@@ -109,13 +112,21 @@ class Snake(object):
         dx, dy = tail.dirnx, tail.dirny
 
         if dx == 1 and dy == 0:
-            self.body.append(Cube((tail.pos[0] - 1, tail.pos[1])))
+            self.body.append(
+                Cube((tail.pos[0] - 1, tail.pos[1]), self.width, self.rows)
+            )
         elif dx == -1 and dy == 0:
-            self.body.append(Cube((tail.pos[0] + 1, tail.pos[1])))
+            self.body.append(
+                Cube((tail.pos[0] + 1, tail.pos[1]), self.width, self.rows)
+            )
         elif dx == 0 and dy == 1:
-            self.body.append(Cube((tail.pos[0], tail.pos[1] - 1)))
+            self.body.append(
+                Cube((tail.pos[0], tail.pos[1] - 1), self.width, self.rows)
+            )
         elif dx == 0 and dy == -1:
-            self.body.append(Cube((tail.pos[0], tail.pos[1] + 1)))
+            self.body.append(
+                Cube((tail.pos[0], tail.pos[1] + 1), self.width, self.rows)
+            )
 
         self.body[-1].dirnx = dx
         self.body[-1].dirny = dy
@@ -141,10 +152,14 @@ def drawGrid(height: int, width: int, rows: int, win: Any) -> Any:
         pygame.draw.line(win, (255, 255, 255), (0, y), (width, y))
 
 
-def redrawWindow(win: Any, height: int, width: int, rows: int) -> Any:
+def redrawWindow(
+    win: Any, height: int, width: int, rows: int, snake: Any, snack: Any
+) -> Any:
     """ redrawWindow function """
     win.fill((0, 0, 0))
     drawGrid(height, width, rows, win)
+    snake.draw(win)
+    snack.draw(win)
     pygame.display.update()
 
 
@@ -168,39 +183,38 @@ def main() -> None:
     width = 500
     height = 500
     rows = 20
-    s = Snake((255, 0, 0), (10, 10))
+    snake = Snake((255, 0, 0), (10, 10), width, rows)
 
-    s.addCube()
-    snack = Cube(randomSnack(rows, s), color=(0, 255, 0))
+    snake.addCube()
+    snack = Cube(randomSnack(rows, snake), width, rows, color=(0, 255, 0))
 
     pygame.init()
     win = pygame.display.set_mode((width, height))
     pygame.display.set_caption("Snake -- The Game")
     run = True
     clock = pygame.time.Clock()
-    pygame.event.get()  # TODO: remove once event loop setup later
 
     while run:
         pygame.time.delay(50)
         clock.tick(10)
 
-        s.move()
-        headPos = s.head.pos
+        snake.move()
+        headPos = snake.head.pos
         if headPos[0] >= 20 or headPos[0] < 0 or headPos[1] >= 20 or headPos[1] < 0:
-            print("Score:", len(s.body))
-            s.reset((10, 10))
+            print("Score:", len(snake.body))
+            snake.reset((10, 10))
 
-        if s.body[0].pos == snack.pos:
-            s.addCube()
-            snack = cube(randomSnack(rows, s), color=(0, 255, 0))
+        if snake.body[0].pos == snack.pos:
+            snake.addCube()
+            snack = Cube(randomSnack(rows, snake), width, rows, color=(0, 255, 0))
 
-        for x in range(len(s.body)):
-            if s.body[x].pos in list(map(lambda z: z.pos, s.body[x + 1 :])):
-                print("Score:", len(s.body))
-                s.reset((10, 10))
+        for x in range(len(snake.body)):
+            if snake.body[x].pos in list(map(lambda z: z.pos, snake.body[x + 1 :])):
+                print("Score:", len(snake.body))
+                snake.reset((10, 10))
                 break
 
-        redrawWindow(win, height, width, rows)
+        redrawWindow(win, height, width, rows, snake, snack)
 
 
 if __name__ == "__main__":
