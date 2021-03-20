@@ -2,7 +2,7 @@
 
 import random
 import pygame
-from typing import Any
+from typing import Any, List
 
 
 class Cube(object):
@@ -49,8 +49,8 @@ class Cube(object):
 class Snake(object):
     """ Snake class """
 
-    body = []
-    turns = {}
+    body: List[Any] = []
+    turns = {}  # type: ignore
 
     def __init__(self, color: Any, pos: Any, width: int, rows: int):
         self.color = color
@@ -209,7 +209,7 @@ def main() -> None:
             snack = Cube(randomSnack(rows, snake), width, rows, color=(0, 255, 0))
 
         for x in range(len(snake.body)):
-            if snake.body[x].pos in list(map(lambda z: z.pos, snake.body[x + 1 :])):
+            if snake.body[x].pos in list(map(lambda z: z.pos, snake.body[x + 1 :])):  # type: ignore
                 print("Score:", len(snake.body))
                 snake.reset((10, 10))
                 break
